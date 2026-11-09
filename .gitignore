@@ -1,0 +1,8 @@
+venv-dbt/
+venv/
+.venv/
+env/
+logs/
+.vscode/
+*:Zone.Identifier
+*.pbix

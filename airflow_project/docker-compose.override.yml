@@ -1,0 +1,7 @@
+services:
+  scheduler:
+    volumes:
+      - ../dbt_project:/usr/local/airflow/dags/dbt/dbt_project
+  webserver:
+    volumes:
+      - ../dbt_project:/usr/local/airflow/dags/dbt/dbt_project
