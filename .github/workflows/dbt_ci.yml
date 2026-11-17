@@ -19,6 +19,7 @@ jobs:
       SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
       SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
 
+    # 1. Đặt mặc định toàn bộ các step sau sẽ chạy trong thư mục dbt_project
     defaults:
       run:
         working-directory: ./dbt_project
@@ -32,11 +33,14 @@ jobs:
         with:
           python-version: '3.11'
 
+      # 2. Ghi đè (override) riêng step này quay về thư mục gốc (.) để đọc requirements.txt
       - name: Install dependencies
+        working-directory: .
         run: |
           python -m pip install --upgrade pip
-          pip install dbt-snowflake
+          pip install -r requirements.txt
 
+      # 3. Các step dbt bên dưới tự động chạy trong dbt_project, không cần khai báo lại nữa
       - name: Run dbt debug
         run: dbt debug --profiles-dir .
 

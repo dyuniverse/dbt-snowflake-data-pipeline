@@ -2,6 +2,8 @@ venv-dbt/
 venv/
 .venv/
 env/
+.env/
+.env
 logs/
 .vscode/
 *:Zone.Identifier
