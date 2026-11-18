@@ -1,0 +1,55 @@
+name: dbt CD Pipeline (Production Deploy)
+
+on:
+  # Trigger tự động ngay lập tức mỗi khi có code được push (hoặc merge PR) vào nhánh main
+  push:
+    branches: [ main ]
+  
+  # (Tùy chọn) Hoặc bạn có thể bật lịch trình chạy định kỳ tự động mỗi ngày vào 2h sáng (giờ UTC)
+  # schedule:
+  #   - cron: '0 2 * * *'
+
+jobs:
+  run-dbt-production:
+    runs-on: ubuntu-latest
+
+    # Vẫn lấy các biến nhạy cảm từ "két sắt" GitHub Secrets
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+      SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+      SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+
+    defaults:
+      run:
+        working-directory: ./dbt_project
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Cài đặt thư viện từ requirements.txt ở thư mục gốc
+      - name: Install dependencies
+        working-directory: .
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Cài đặt các dbt packages (nếu có)
+      - name: Install dbt packages
+        run: dbt deps --profiles-dir .
+
+      # BƯỚC QUAN TRỌNG NHẤT CỦA CD: Chạy transform dữ liệu trên Snowflake
+      - name: Run dbt models
+        run: dbt run --profiles-dir .
+
+      # Kiểm tra lại tính toàn vẹn của dữ liệu sau khi chạy
+      - name: Run dbt tests
+        run: dbt test --profiles-dir .
